@@ -5,39 +5,80 @@ import matplotlib.pyplot as plt
 
 
 class NN_Model(tf.keras.Model): 
+    '''
+    Neural network model. 
+    Tensorflow Model class 
+    '''
 
     def __init__(self,output_dim,layers = [33, 33, 33],**kwargs):
+        '''
+        Build a Multilayer perceptron 
+        Inputs : 
+        output_dim ::: int ::: Model output dimension 
+        layers ::: list of int ::: number of units in each layer of the MLP 
+        Outputs : 
+        None 
+        '''
         super().__init__(**kwargs)
         self.output_layer = tf.keras.layers.Dense(output_dim)
-        self.hidden_layers = [tf.keras.layers.Dense(n_units, activation = 'tanh') for n_units in layers]
+        self.hidden_layers = [tf.keras.layers.Dense(n_units, 
+                                                    activation = 'tanh')
+                               for n_units in layers]
     
     def call(self,input):
+        '''
+        Model call method. Renders the model prediction
+        Inputs : 
+        input ::: array like object (n_batch, output_dim) ::: input of 
+        the model 
+        Outputs :
+        output ::: array like object (n_batch, output_dim)::: output of 
+        the model
+        '''
         x = input
         for layer in self.hidden_layers : 
             x = layer(x)
         return self.output_layer(x)
 
 class PINNSolver():
-
+    '''
+    PINNSolver object
+    '''
     def __init__(self, model, X_r):
+        '''
+        Inputs :
+        model ::: NN_Model instance ::: Neural network used for training
+        X_r ::: array like object ::: collocation points 
+        Outputs : 
+        None
+        '''
+        # Initialize model and build model 
         self.model = model
         self.input_dim = np.shape(X_r)[1]
         self.model.build(input_shape=(None,self.input_dim))
+        # Initialize collocation points 
         self.collocation = tf.convert_to_tensor(X_r)
         # Initialize history of losses and global iteration counter
         self.hist = []
         self.iter = 0
     
     def loss_fn(self, X, u):
-        
-        # Compute phi_r
+        ''' 
+        Calculates loos function, which is the sum of the PDE loss 
+        (viz. residual, calculated on collocation points) with the 
+        vanilla loss, here RMSE
+        Inputs : 
+        X ::: array object (n_batch, input_dim) ::: Input features 
+        u ::: array like object (n_batch, output_dim) ::: Target values 
+        Output :
+        loss ::: float ::: total loss 
+        '''
+        # Compute PDE residual
         r = self.get_r()
         phi_r = (1e-4)*tf.reduce_mean(tf.square(r))
         
         # Initialize loss
         loss = phi_r
-
-        # Initialize loss
         u_pred = self.model(X)
         loss = phi_r + tf.reduce_mean(tf.keras.losses.mean_squared_error(u, u_pred))
 
