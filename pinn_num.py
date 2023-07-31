@@ -256,8 +256,10 @@ def main():
     # Set optimizer 
     optim = tf.keras.optimizers.Adam(learning_rate = 1e-4)
     # Solve 
-    solver.solve_with_TFoptimizer(optim, x_data, y_data, N=2500)
+    solver.solve_with_TFoptimizer(optim, x_data, y_data, N=25000)
     solver.plot_loss_history(ax=None)
+    plt.show()
+    plt.close()
     # Plot Result
     yhat = solver.model(solver.x)
     plt.plot(solver.x,yhat,'ro')
