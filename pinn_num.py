@@ -3,6 +3,7 @@ import numpy as np
 import scipy.optimize
 import matplotlib.pyplot as plt 
 
+DTYPE='float32'
 
 class NN_Model(tf.keras.Model): 
     '''
@@ -297,7 +298,16 @@ def main():
     # Set optimizer 
     optim = tf.keras.optimizers.Adam(learning_rate = 1e-4)
     # Solve 
-    solver.solve_with_TFoptimizer(optim, x_data, y_data, N=25000)
+    solver.solve_with_TFoptimizer(optim, x_data, y_data, N=1000)
+    #solver.solve_with_ScipyOptimizer( x_data, y_data, method='L-BFGS-B', **kwargs)
+    solver.solve_with_ScipyOptimizer(x_data, y_data,
+                                     method='L-BFGS-B',
+                                     options={'maxiter': 25000,
+                                              'maxfun': 50000,
+                                              'maxcor': 50,
+                                              'maxls': 50,
+                                              'ftol': 1.0*np.finfo(float).eps})
+    print(1.0*np.finfo(float).eps)
     solver.plot_loss_history(ax=None)
     plt.show()
     plt.close()
