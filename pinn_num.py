@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 class NN_Model(tf.keras.Model): 
 
-    def __init__(self,output_dim,layers = [10, 10, 10],**kwargs):
+    def __init__(self,output_dim,layers = [33, 33, 33],**kwargs):
         super().__init__(**kwargs)
         self.output_layer = tf.keras.layers.Dense(output_dim)
         self.hidden_layers = [tf.keras.layers.Dense(n_units, activation = 'tanh') for n_units in layers]
@@ -32,7 +32,7 @@ class PINNSolver():
         
         # Compute phi_r
         r = self.get_r()
-        phi_r = tf.reduce_mean(tf.square(r))
+        phi_r = (1e-4)*tf.reduce_mean(tf.square(r))
         
         # Initialize loss
         loss = phi_r
