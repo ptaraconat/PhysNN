@@ -221,6 +221,90 @@ class PINNSolver():
         ax.set_ylabel('$\\phi^{n_{epoch}}$')
         return ax
 
+class StatNS_PINN(PINNSolver): 
+
+    def __init__(self,model,X_r, viscosity):
+        '''
+        '''
+        super().__init__(model,X_r)
+        self.x = X_r[:,0:1]
+        self.y = X_r[:,1:2]
+        self.viscosity = viscosity
+
+    def fun_r(self,dico):
+        u = dico['u']
+        v = dico['v']
+        p = dico['p']
+        u_x = dico['u_x']
+        u_y = dico['u_y']
+        v_x = dico['v_x']
+        v_y = dico['v_y']
+        p_x = dico['p_x']
+        p_y = dico['p_y']
+        u_xx = dico['u_xx']
+        u_yy = dico['u_yy']
+        v_xx = dico['v_xx']
+        v_yy = dico['v_yy']
+
+        res1 = u*u_x + v*u_y + p_x - self.viscosity*(u_xx + u_yy)
+        res2 = u*v_x + v*v_y + p_y - self.viscosity*(v_xx + v_yy)
+        res3 = u_x + v_y
+
+        returned_val = tf.reduce_sum(tf.square(res1)) + tf.reduce_sum(tf.square(res2))
+
+        return returned_val
+    
+    def get_r(self):
+        x = self.x
+        y = self.y
+        with tf.GradientTape(persistent = True) as tape3 :
+            tape3.watch(x)
+            tape3.watch(y)
+            with tf.GradientTape(persistent = True) as tape2 :
+            tape2.watch(x)
+            tape2.watch(y)
+            with tf.GradientTape(persistent = True) as tape :
+                tape.watch(x)
+                tape.watch(y)
+                stack = tf.stack((x,y),axis = 1)
+                pred = model(stack)
+                psi, p = pred[:,0], pred[:,1]
+
+                u = tape.gradient(psi,x)
+                v = -tape.gradient(psi,y)
+                p_x = tape.gradient(p,x)
+                p_y = tape.gradient(p,y)
+
+            u_x = tape2.gradient(u,x)
+            u_y = tape2.gradient(u,y)
+            v_x = tape2.gradient(v,x)
+            v_y = tape2.gradient(v,y)
+
+            u_xx = tape3.gradient(u_x,x)
+            u_yy = tape3.gradient(u_y,y)
+            v_xx = tape3.gradient(v_x,x)
+            v_yy = tape3.gradient(v_y,y)
+
+        dico = {'u' : u ,
+                'v' : v ,
+                'p' : p ,
+                'u_x' : u_x,
+                'u_y' : u_y,
+                'v_x' : v_x,
+                'v_y' : v_y,
+                'p_x' : p_x,
+                'p_y' : p_y,
+                'u_xx' : u_xx,
+                'u_yy' : u_yy,
+                'v_xx' : v_xx,
+                'v_yy' : v_yy
+                }
+
+        del tape, tape2, tape3
+
+        return self.fun_r(dico)
+
+
 class HarmOsci_PINN(PINNSolver):
 
     def __init__(self,model,X_r, mass, viscosity, stiffness): 
