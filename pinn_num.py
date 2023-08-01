@@ -314,6 +314,52 @@ class StatNS_PINN(PINNSolver):
         del tape, tape2, tape3
 
         return self.fun_r(dico)
+    
+    def predict_velocity(X): 
+        x, y = X[:,0:1], Y[:,1:2]
+        with tf.GradientTape(persistent = True) as tape : 
+            tape.watch(x)
+            tape.watch(y)
+            stack = tf.stack((x,y),axis = 1)
+            Yhat = self.model(stack)
+            psi, p = Y_hat[:,0], Y_hat[:,1]
+            u = tape.gradient(psi,x)
+            v = -tape.gradient(psi,y)
+        
+        dico = {'u' : u,
+                'v' : v,
+                'p' : p}
+        del tape
+
+        return dico  
+    
+    def loss_fn(self, X, Y):
+        ''' 
+        Calculates loos function, which is the sum of the PDE loss 
+        (viz. residual, calculated on collocation points) with the 
+        vanilla loss, here RMSE
+        Inputs : 
+        X ::: array object (n_batch, input_dim) ::: Input features 
+        Y ::: array like object (n_batch, output_dim) ::: Target values 
+        Output :
+        loss ::: float ::: total loss 
+        '''
+        # Compute PDE residual
+        r = self.get_r()
+        phi_r = self.pde_residual_scaling_*tf.reduce_mean(tf.square(r))
+
+        # Add phi_0 and phi_b to the loss
+        #for i in range(len(X)):
+        #    u_pred = self.model(X[i])
+        #    loss += tf.reduce_mean(tf.square(u[i] - u_pred))
+
+        dico = self.predict_velocity(X)
+        u = dico['u']
+        v = dico['v']
+        uv_hat = tf.stack((u,v),axis = 1)
+        loss = phi_r + tf.reduce_mean(tf.keras.losses.mean_squared_error(Y, uv_hat))
+        
+        return loss
 
 
 class HarmOsci_PINN(PINNSolver):
