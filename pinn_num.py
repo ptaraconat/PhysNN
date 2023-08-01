@@ -93,6 +93,17 @@ class PINNSolver():
         return loss
     
     def get_grad(self, X, u):
+        '''
+        Calculate Loss gradients with respect to model trainable parameters 
+        Inputs : 
+        X ::: array like object (n_batch,input_dim) ::: input features of 
+        the model 
+        u ::: array like object (n_batch, output_dim) ::: target values 
+        associated with input features 
+        Outputs : 
+        loss ::: ::: Loss value for the current training step 
+        g ::: ::: gradients of the loss with respect to the different parameters 
+        '''
         with tf.GradientTape(persistent=True) as tape:
             # This tape is for derivatives with
             # respect to trainable variables
