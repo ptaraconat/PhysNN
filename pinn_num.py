@@ -5,6 +5,16 @@ import matplotlib.pyplot as plt
 
 DTYPE='float32'
 
+def get_model(input_dim,output_dim,layers): 
+    input = tf.keras.Input(shape = (input_dim,))
+    x = input
+    for n_units in layers : 
+        x = tf.keras.layers.Dense(n_units, activation = 'tanh')(x)
+    x = tf.keras.layers.Dense(output_dim,activation = 'linear')(x)
+    return tf.keras.Model(inputs = input, outputs = x)
+
+
+
 class NN_Model(tf.keras.Model): 
     '''
     Neural network model. 
@@ -56,7 +66,7 @@ class PINNSolver():
         # Initialize model and build model 
         self.model = model
         self.input_dim = np.shape(X_r)[1]
-        self.model.build(input_shape=(self.input_dim,1))
+        #self.model.build(input_shape=(self.input_dim,))
         # Initialize collocation points 
         self.collocation = tf.convert_to_tensor(X_r)
         # Initialize history of losses and global iteration counter
@@ -157,6 +167,8 @@ class PINNSolver():
             return weight_list, shape_list
 
         x0, shape_list = get_weight_tensor()
+
+        print(x0)
         
         def set_weight_tensor(weight_list):
             """Function which sets list of weights
@@ -193,6 +205,8 @@ class PINNSolver():
             set_weight_tensor(w)
             # Determine value of \phi and gradient w.r.t. \theta at w
             loss, grad = self.get_grad(X, u)
+
+            print(grad)
             
             # Store current loss for callback function            
             loss = loss.numpy().astype(np.float64)
@@ -209,6 +223,7 @@ class PINNSolver():
             # Return value and gradient of \phi as tuple
             return loss, grad_flat
         
+        print('run scipy optimizer')
         
         return scipy.optimize.minimize(fun=get_loss_and_grad,
                                        x0=x0,
@@ -244,20 +259,7 @@ class StatNS_PINN(PINNSolver):
         self.y = tf.convert_to_tensor(self.y)
         self.viscosity = viscosity
 
-    def fun_r(self,dico):
-        u = dico['u']
-        v = dico['v']
-        p = dico['p']
-        u_x = dico['u_x']
-        u_y = dico['u_y']
-        v_x = dico['v_x']
-        v_y = dico['v_y']
-        p_x = dico['p_x']
-        p_y = dico['p_y']
-        u_xx = dico['u_xx']
-        u_yy = dico['u_yy']
-        v_xx = dico['v_xx']
-        v_yy = dico['v_yy']
+    def fun_r(self,u, v, p, u_x, u_y, v_x, v_y, p_x, p_y, u_xx, u_yy, v_xx, v_yy):
 
         res1 = u*u_x + v*u_y + p_x - self.viscosity*(u_xx + u_yy)
         res2 = u*v_x + v*v_y + p_y - self.viscosity*(v_xx + v_yy)
@@ -270,72 +272,33 @@ class StatNS_PINN(PINNSolver):
     def get_r(self):
         x = self.x
         y = self.y
-        with tf.GradientTape(persistent = True) as tape3 :
-            tape3.watch(x)
-            tape3.watch(y)
-            with tf.GradientTape(persistent = True) as tape2 :
-                tape2.watch(x)
-                tape2.watch(y)
-                with tf.GradientTape(persistent = True) as tape :
-                    tape.watch(x)
-                    tape.watch(y)
-                    stack = tf.stack((x,y),axis = 1)
-                    pred = self.model(stack)
-                    psi, p = pred[:,0], pred[:,1]
+        with tf.GradientTape(persistent = True) as tape2 :
+            tape2.watch(x)
+            tape2.watch(y)
+            with tf.GradientTape(persistent = True) as tape :
+                tape.watch(x)
+                tape.watch(y)
+                stack = tf.stack((x,y),axis = 1)
+                pred = self.model(stack)
+                u, v, p = pred[:,0], pred[:,1], pred[:,2]
+                p_x = tape.gradient(p,x)
+                p_y = tape.gradient(p,y)
 
-                    u = tape.gradient(psi,x)
-                    v = -tape.gradient(psi,y)
-                    p_x = tape.gradient(p,x)
-                    p_y = tape.gradient(p,y)
+                u_x = tape.gradient(u,x)
+                u_y = tape.gradient(u,y)
+                v_x = tape.gradient(v,x)
+                v_y = tape.gradient(v,y)
 
-                u_x = tape2.gradient(u,x)
-                u_y = tape2.gradient(u,y)
-                v_x = tape2.gradient(v,x)
-                v_y = tape2.gradient(v,y)
-
-            u_xx = tape3.gradient(u_x,x)
-            u_yy = tape3.gradient(u_y,y)
-            v_xx = tape3.gradient(v_x,x)
-            v_yy = tape3.gradient(v_y,y)
-
-        dico = {'u' : u ,
-                'v' : v ,
-                'p' : p ,
-                'u_x' : u_x,
-                'u_y' : u_y,
-                'v_x' : v_x,
-                'v_y' : v_y,
-                'p_x' : p_x,
-                'p_y' : p_y,
-                'u_xx' : u_xx,
-                'u_yy' : u_yy,
-                'v_xx' : v_xx,
-                'v_yy' : v_yy
-                }
-
-        del tape, tape2, tape3
-
-        return self.fun_r(dico)
-    
-    def predict_velocity(self,X): 
-        x, y = X[:,0:1], X[:,1:2]
-        x = tf.convert_to_tensor(x)
-        y = tf.convert_to_tensor(y)
-        with tf.GradientTape(persistent = True) as tape : 
-            tape.watch(x)
-            tape.watch(y)
-            stack = tf.stack((x,y),axis = 1)
-            Y_hat = self.model(stack)
-            psi, p = Y_hat[:,0], Y_hat[:,1]
-            u = tape.gradient(psi,x)
-            v = -tape.gradient(psi,y)
+            u_xx = tape2.gradient(u_x,x)
+            u_yy = tape2.gradient(u_y,y)
+            v_xx = tape2.gradient(v_x,x)
+            v_yy = tape2.gradient(v_y,y)
         
-        dico = {'u' : u,
-                'v' : v,
-                'p' : p}
-        del tape
+        residual = self.fun_r(u, v, p, u_x, u_y, v_x, v_y, p_x, p_y, u_xx, u_yy, v_xx, v_yy)
 
-        return dico  
+        del tape, tape2
+
+        return residual
     
     def loss_fn(self, X, Y):
         ''' 
@@ -357,10 +320,11 @@ class StatNS_PINN(PINNSolver):
         #    u_pred = self.model(X[i])
         #    loss += tf.reduce_mean(tf.square(u[i] - u_pred))
 
-        dico = self.predict_velocity(X)
-        u = dico['u']
-        v = dico['v']
-        uv_hat = tf.stack((u,v),axis = 1)
+        pred = self.model(X)
+        u, v, p = pred[:,0], pred[:,1], pred[:,2]
+        #u = dico['u']
+        #v = dico['v']
+        uv_hat = tf.squeeze(tf.stack((u,v),axis = 1))
         print(np.shape(uv_hat))
         print(np.shape(Y))
         loss = phi_r + tf.reduce_mean(tf.keras.losses.mean_squared_error(Y, uv_hat))

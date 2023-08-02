@@ -40,7 +40,7 @@ def get_data():
 
     #X_r = np.expand_dims(X_r,2)
     #X_data = np.expand_dims(X_data,2)
-    Y_data = np.expand_dims(Y_data,2)
+    #Y_data = np.expand_dims(Y_data,2)
 
     X_r = X_r.astype(np.float32)
     X_data = X_data.astype(np.float32)
@@ -57,7 +57,8 @@ def main():
     nu = mu/rho
     print('hello')
     # Set Model 
-    model = NN_Model(2, layers= [50, 50, 50, 50, 50])
+    #model = NN_Model(3, layers= [50, 50, 50, 50, 50])
+    model = get_model(2,3,layers = [50, 50, 50, 50, 50])
     # Get domain data and collocation points 
     colloc_point, X, Y = get_data()
     print(np.shape(colloc_point))
@@ -73,7 +74,8 @@ def main():
     # Set optimizer 
     optim = tf.keras.optimizers.Adam(learning_rate = 1e-4)
     # Solve 
-    solver.solve_with_TFoptimizer(optim, X, Y, N=50)
+    #solver.solve_with_TFoptimizer(optim, X, Y, N=1)
+    print('run solver model')
     solver.solve_with_ScipyOptimizer(X, Y,
                                      method='L-BFGS-B',
                                      options={'maxiter': 25000,

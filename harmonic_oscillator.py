@@ -3,7 +3,8 @@ from pinn_num import *
 def main():
     print('hello')
     # Set Model 
-    model = NN_Model(1)
+    #model = NN_Model(1)
+    model = get_model(1,1,layers = [33, 33, 33])
     # Set collocation points 
     X_r = np.linspace(0,1,500)
     X_r = np.expand_dims(X_r,1).astype(np.float32)
@@ -43,8 +44,7 @@ def main():
     # Set optimizer 
     optim = tf.keras.optimizers.Adam(learning_rate = 1e-4)
     # Solve 
-    solver.solve_with_TFoptimizer(optim, x_data, y_data, N=1000)
-    #solver.solve_with_ScipyOptimizer( x_data, y_data, method='L-BFGS-B', **kwargs)
+    #solver.solve_with_TFoptimizer(optim, x_data, y_data, N=1000)
     solver.solve_with_ScipyOptimizer(x_data, y_data,
                                      method='L-BFGS-B',
                                      options={'maxiter': 25000,
