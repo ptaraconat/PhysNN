@@ -40,11 +40,12 @@ def get_data():
 
     #X_r = np.expand_dims(X_r,2)
     #X_data = np.expand_dims(X_data,2)
-    #Y_data = np.expand_dims(Y_data,2)
+    Y_data = np.expand_dims(Y_data,2)
 
     X_r = X_r.astype(np.float32)
     X_data = X_data.astype(np.float32)
     Y_data = Y_data.astype(np.float32)
+    
 
     return X_r, X_data, Y_data
 
@@ -59,13 +60,59 @@ def main():
     model = NN_Model(2, layers= [50, 50, 50, 50, 50])
     # Get domain data and collocation points 
     colloc_point, X, Y = get_data()
+    print(np.shape(colloc_point))
+    print(np.shape(X))
     # Set PDE parameters 
     # Set solver 
-    solver = StatNS_PINN(model,colloc_point, nu)
+    solver = StatNS_PINN(model,colloc_point, nu,pde_residual_scaling = 1e-1)
     solver.model.summary()
     # Set data points 
     print(solver.input_dim)
+    print(np.shape(Y))
     print('hello')
+    # Set optimizer 
+    optim = tf.keras.optimizers.Adam(learning_rate = 1e-4)
+    # Solve 
+    solver.solve_with_TFoptimizer(optim, X, Y, N=50)
+    solver.solve_with_ScipyOptimizer(X, Y,
+                                     method='L-BFGS-B',
+                                     options={'maxiter': 25000,
+                                              'maxfun': 50000,
+                                              'maxcor': 50,
+                                              'maxls': 50,
+                                              'ftol': 1.0*np.finfo(float).eps})
+    # Plot resulting fields 
+    m_tmp1 = 100
+    m_tmp2 = 30
+    x_tmp = np.linspace(0,L,m_tmp1+2)
+    y_tmp = np.linspace(0,h,m_tmp2+2)
+    x_tmp, y_tmp = np.meshgrid(x_tmp,y_tmp)
+    x_tmp = x_tmp.flatten()
+    y_tmp = y_tmp.flatten()
+    X_disp = np.concatenate((np.expand_dims(x_tmp,1),np.expand_dims(y_tmp,1)),axis = 1)
+
+    dico = solver.predict_velocity(X_disp)#get_pde_differentials(model,tf.convert_to_tensor(X_disp))
+    u = dico['u']
+    v = dico['v']
+    p = dico['p']
+
+    plt.scatter(x_tmp,y_tmp,c = p)
+    #plt.tricontourf(x_tmp,y_tmp,u)
+    #plt.tricontourf(xdata, ydata, zdata)
+    plt.colorbar()
+    plt.show()
+
+    plt.scatter(x_tmp,y_tmp,c = u)
+    #plt.tricontourf(x_tmp,y_tmp,u)
+    #plt.tricontourf(xdata, ydata, zdata)
+    plt.colorbar()
+    plt.show()
+
+    plt.scatter(x_tmp,y_tmp,c = v)
+    #plt.tricontourf(x_tmp,y_tmp,u)
+    #plt.tricontourf(xdata, ydata, zdata)
+    plt.colorbar()
+    plt.show()
 
 if __name__ == '__main__' : 
     main()

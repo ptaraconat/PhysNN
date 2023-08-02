@@ -56,7 +56,7 @@ class PINNSolver():
         # Initialize model and build model 
         self.model = model
         self.input_dim = np.shape(X_r)[1]
-        self.model.build(input_shape=(None,self.input_dim))
+        self.model.build(input_shape=(self.input_dim,1))
         # Initialize collocation points 
         self.collocation = tf.convert_to_tensor(X_r)
         # Initialize history of losses and global iteration counter
@@ -234,12 +234,14 @@ class PINNSolver():
 
 class StatNS_PINN(PINNSolver): 
 
-    def __init__(self,model,X_r, viscosity):
+    def __init__(self,model,X_r, viscosity,pde_residual_scaling = 1e-4):
         '''
         '''
-        super().__init__(model,X_r)
+        super().__init__(model,X_r,pde_residual_scaling = 1e-4)
         self.x = X_r[:,0:1]
+        self.x = tf.convert_to_tensor(self.x)
         self.y = X_r[:,1:2]
+        self.y = tf.convert_to_tensor(self.y)
         self.viscosity = viscosity
 
     def fun_r(self,dico):
@@ -261,7 +263,7 @@ class StatNS_PINN(PINNSolver):
         res2 = u*v_x + v*v_y + p_y - self.viscosity*(v_xx + v_yy)
         res3 = u_x + v_y
 
-        returned_val = tf.reduce_sum(tf.square(res1)) + tf.reduce_sum(tf.square(res2))
+        returned_val = res1 + res2 #tf.reduce_sum(tf.square(res1)) + tf.reduce_sum(tf.square(res2))
 
         return returned_val
     
@@ -272,24 +274,24 @@ class StatNS_PINN(PINNSolver):
             tape3.watch(x)
             tape3.watch(y)
             with tf.GradientTape(persistent = True) as tape2 :
-            tape2.watch(x)
-            tape2.watch(y)
-            with tf.GradientTape(persistent = True) as tape :
-                tape.watch(x)
-                tape.watch(y)
-                stack = tf.stack((x,y),axis = 1)
-                pred = model(stack)
-                psi, p = pred[:,0], pred[:,1]
+                tape2.watch(x)
+                tape2.watch(y)
+                with tf.GradientTape(persistent = True) as tape :
+                    tape.watch(x)
+                    tape.watch(y)
+                    stack = tf.stack((x,y),axis = 1)
+                    pred = self.model(stack)
+                    psi, p = pred[:,0], pred[:,1]
 
-                u = tape.gradient(psi,x)
-                v = -tape.gradient(psi,y)
-                p_x = tape.gradient(p,x)
-                p_y = tape.gradient(p,y)
+                    u = tape.gradient(psi,x)
+                    v = -tape.gradient(psi,y)
+                    p_x = tape.gradient(p,x)
+                    p_y = tape.gradient(p,y)
 
-            u_x = tape2.gradient(u,x)
-            u_y = tape2.gradient(u,y)
-            v_x = tape2.gradient(v,x)
-            v_y = tape2.gradient(v,y)
+                u_x = tape2.gradient(u,x)
+                u_y = tape2.gradient(u,y)
+                v_x = tape2.gradient(v,x)
+                v_y = tape2.gradient(v,y)
 
             u_xx = tape3.gradient(u_x,x)
             u_yy = tape3.gradient(u_y,y)
@@ -315,13 +317,15 @@ class StatNS_PINN(PINNSolver):
 
         return self.fun_r(dico)
     
-    def predict_velocity(X): 
-        x, y = X[:,0:1], Y[:,1:2]
+    def predict_velocity(self,X): 
+        x, y = X[:,0:1], X[:,1:2]
+        x = tf.convert_to_tensor(x)
+        y = tf.convert_to_tensor(y)
         with tf.GradientTape(persistent = True) as tape : 
             tape.watch(x)
             tape.watch(y)
             stack = tf.stack((x,y),axis = 1)
-            Yhat = self.model(stack)
+            Y_hat = self.model(stack)
             psi, p = Y_hat[:,0], Y_hat[:,1]
             u = tape.gradient(psi,x)
             v = -tape.gradient(psi,y)
@@ -357,6 +361,8 @@ class StatNS_PINN(PINNSolver):
         u = dico['u']
         v = dico['v']
         uv_hat = tf.stack((u,v),axis = 1)
+        print(np.shape(uv_hat))
+        print(np.shape(Y))
         loss = phi_r + tf.reduce_mean(tf.keras.losses.mean_squared_error(Y, uv_hat))
         
         return loss
