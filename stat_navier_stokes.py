@@ -1,9 +1,6 @@
 from pinn_num import * 
 
-def get_data():
-    u_in = 0.034
-    h = 0.05
-    L = 20*h
+def get_data(L, h, u_in):
     # Generate boudary data (X_data, Y_data)
     ## Walls
     m_tmp = 100
@@ -51,6 +48,9 @@ def get_data():
 
 
 def main():
+    u_in = 0.034
+    h = 0.05
+    L = 20*h
     #Init data
     rho = 910
     mu = 0.3094
@@ -58,9 +58,9 @@ def main():
     print('hello')
     # Set Model 
     #model = NN_Model(3, layers= [50, 50, 50, 50, 50])
-    model = get_model(2,3,layers = [50, 50, 50, 50, 50])
+    model = get_model(2,3,layers = [30,30,30])
     # Get domain data and collocation points 
-    colloc_point, X, Y = get_data()
+    colloc_point, X, Y = get_data(L, h, u_in)
     print(np.shape(colloc_point))
     print(np.shape(X))
     # Set PDE parameters 
@@ -74,7 +74,7 @@ def main():
     # Set optimizer 
     optim = tf.keras.optimizers.Adam(learning_rate = 1e-4)
     # Solve 
-    #solver.solve_with_TFoptimizer(optim, X, Y, N=1)
+    solver.solve_with_TFoptimizer(optim, X, Y, N=200)
     print('run solver model')
     solver.solve_with_ScipyOptimizer(X, Y,
                                      method='L-BFGS-B',
@@ -93,10 +93,9 @@ def main():
     y_tmp = y_tmp.flatten()
     X_disp = np.concatenate((np.expand_dims(x_tmp,1),np.expand_dims(y_tmp,1)),axis = 1)
 
-    dico = solver.predict_velocity(X_disp)#get_pde_differentials(model,tf.convert_to_tensor(X_disp))
-    u = dico['u']
-    v = dico['v']
-    p = dico['p']
+    pred = solver.model(X_disp)
+    u, v, p = pred[:,0], pred[:,1], pred[:,2]
+
 
     plt.scatter(x_tmp,y_tmp,c = p)
     #plt.tricontourf(x_tmp,y_tmp,u)

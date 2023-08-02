@@ -167,8 +167,6 @@ class PINNSolver():
             return weight_list, shape_list
 
         x0, shape_list = get_weight_tensor()
-
-        print(x0)
         
         def set_weight_tensor(weight_list):
             """Function which sets list of weights
@@ -206,7 +204,7 @@ class PINNSolver():
             # Determine value of \phi and gradient w.r.t. \theta at w
             loss, grad = self.get_grad(X, u)
 
-            print(grad)
+            #print(grad)
             
             # Store current loss for callback function            
             loss = loss.numpy().astype(np.float64)
@@ -325,10 +323,9 @@ class StatNS_PINN(PINNSolver):
         #u = dico['u']
         #v = dico['v']
         uv_hat = tf.squeeze(tf.stack((u,v),axis = 1))
-        print(np.shape(uv_hat))
-        print(np.shape(Y))
+ 
         loss = phi_r + tf.reduce_mean(tf.keras.losses.mean_squared_error(Y, uv_hat))
-        
+
         return loss
 
 
