@@ -3,7 +3,7 @@ from pinn_num import *
 def get_data(L, h, u_in):
     # Generate boudary data (X_data, Y_data)
     ## Walls
-    m_tmp = 100
+    m_tmp = 500
     x_tmp = np.linspace(0, L, m_tmp)
     y_tmp = h*np.ones(m_tmp)
     X_data = np.concatenate((np.expand_dims(x_tmp,1),np.expand_dims(y_tmp,1)),axis = 1)
@@ -13,7 +13,7 @@ def get_data(L, h, u_in):
     X_data = np.concatenate((X_data,X_tmp),axis = 0)
     Y_data = np.zeros(X_data.shape)
     ## Inlet
-    m_tmp = 40
+    m_tmp = 100
     y_tmp = np.linspace(0, h, m_tmp+2)[1:-1]
     x_tmp = np.zeros(np.shape(y_tmp))
     X_tmp = np.concatenate((np.expand_dims(x_tmp,1),np.expand_dims(y_tmp,1)),axis = 1)
@@ -22,8 +22,8 @@ def get_data(L, h, u_in):
     X_data = np.concatenate((X_data,X_tmp),axis = 0)
     Y_data = np.concatenate((Y_data,Y_tmp),axis = 0)
     # Generate Random point data (X_r)
-    m_tmp1 = 100
-    m_tmp2 = 30
+    m_tmp1 = 500
+    m_tmp2 = 100
     x_tmp = np.linspace(0,L,m_tmp1+2)[1:-1]
     y_tmp = np.linspace(0,h,m_tmp2+2)[1:-1]
     x_tmp, y_tmp = np.meshgrid(x_tmp,y_tmp)
@@ -33,6 +33,16 @@ def get_data(L, h, u_in):
     # Plot data points
     plt.plot(X_r[:,0],X_r[:,1],'ro')
     plt.plot(X_data[:,0],X_data[:,1],'k*')
+    plt.show()
+
+    plt.scatter(X_r[:,0],X_r[:,1],c='black')
+    plt.scatter(X_data[:,0],X_data[:,1],c = Y_data[:,0] )
+    plt.colorbar()
+    plt.show()
+
+    plt.scatter(X_r[:,0],X_r[:,1],c='black')
+    plt.scatter(X_data[:,0],X_data[:,1],c = Y_data[:,1] )
+    plt.colorbar()
     plt.show()
 
     #X_r = np.expand_dims(X_r,2)
