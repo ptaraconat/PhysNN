@@ -250,7 +250,7 @@ class StatNS_PINN(PINNSolver):
     def __init__(self,model,X_r, viscosity,pde_residual_scaling = 1e-4):
         '''
         '''
-        super().__init__(model,X_r,pde_residual_scaling = 1e-4)
+        super().__init__(model,X_r,pde_residual_scaling = pde_residual_scaling)
         self.x = X_r[:,0:1]
         self.x = tf.convert_to_tensor(self.x)
         self.y = X_r[:,1:2]
@@ -263,7 +263,7 @@ class StatNS_PINN(PINNSolver):
         res2 = u*v_x + v*v_y + p_y - self.viscosity*(v_xx + v_yy)
         res3 = u_x + v_y
 
-        returned_val = res1 + res2 #tf.reduce_sum(tf.square(res1)) + tf.reduce_sum(tf.square(res2))
+        returned_val = tf.square(res1)+ tf.square(res2) #tf.reduce_sum(tf.square(res1)) + tf.reduce_sum(tf.square(res2))
 
         return returned_val
     
@@ -311,7 +311,7 @@ class StatNS_PINN(PINNSolver):
         '''
         # Compute PDE residual
         r = self.get_r()
-        phi_r = self.pde_residual_scaling_*tf.reduce_mean(tf.square(r))
+        phi_r = self.pde_residual_scaling_*tf.reduce_sum(r)
 
         # Add phi_0 and phi_b to the loss
         #for i in range(len(X)):
@@ -320,11 +320,9 @@ class StatNS_PINN(PINNSolver):
 
         pred = self.model(X)
         u, v, p = pred[:,0], pred[:,1], pred[:,2]
-        #u = dico['u']
-        #v = dico['v']
         uv_hat = tf.squeeze(tf.stack((u,v),axis = 1))
  
-        loss = phi_r + tf.reduce_mean(tf.keras.losses.mean_squared_error(Y, uv_hat))
+        loss = phi_r + tf.reduce_sum(tf.square(Y - uv_hat))
 
         return loss
 

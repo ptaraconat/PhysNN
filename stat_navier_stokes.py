@@ -22,8 +22,8 @@ def get_data(L, h, u_in):
     X_data = np.concatenate((X_data,X_tmp),axis = 0)
     Y_data = np.concatenate((Y_data,Y_tmp),axis = 0)
     # Generate Random point data (X_r)
-    m_tmp1 = 500
-    m_tmp2 = 100
+    m_tmp1 = 100
+    m_tmp2 = 50
     x_tmp = np.linspace(0,L,m_tmp1+2)[1:-1]
     y_tmp = np.linspace(0,h,m_tmp2+2)[1:-1]
     x_tmp, y_tmp = np.meshgrid(x_tmp,y_tmp)
@@ -75,14 +75,14 @@ def main():
     print(np.shape(X))
     # Set PDE parameters 
     # Set solver 
-    solver = StatNS_PINN(model,colloc_point, nu,pde_residual_scaling = 1e-1)
+    solver = StatNS_PINN(model,colloc_point, nu,pde_residual_scaling = 1.)
     solver.model.summary()
     # Set data points 
     print(solver.input_dim)
     print(np.shape(Y))
     print('hello')
     # Set optimizer 
-    optim = tf.keras.optimizers.Adam(learning_rate = 1e-4)
+    optim = tf.keras.optimizers.Adam(learning_rate = 1e-3)
     # Solve 
     solver.solve_with_TFoptimizer(optim, X, Y, N=200)
     print('run solver model')
