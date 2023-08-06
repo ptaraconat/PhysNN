@@ -84,7 +84,7 @@ def main():
     # Set optimizer 
     optim = tf.keras.optimizers.Adam(learning_rate = 1e-3)
     # Solve 
-    solver.solve_with_TFoptimizer(optim, X, Y, N=200)
+    solver.solve_with_TFoptimizer(optim, X, Y, N=10)
     print('run solver model')
     solver.solve_with_ScipyOptimizer(X, Y,
                                      method='L-BFGS-B',
@@ -92,7 +92,8 @@ def main():
                                               'maxfun': 50000,
                                               'maxcor': 50,
                                               'maxls': 50,
-                                              'ftol': 1.0*np.finfo(float).eps})
+                                              'ftol': 1.0*np.finfo(float).eps,
+                                              'pgtol' : 1.e-10})
     # Plot resulting fields 
     m_tmp1 = 100
     m_tmp2 = 30
@@ -108,20 +109,14 @@ def main():
 
 
     plt.scatter(x_tmp,y_tmp,c = p)
-    #plt.tricontourf(x_tmp,y_tmp,u)
-    #plt.tricontourf(xdata, ydata, zdata)
     plt.colorbar()
     plt.show()
 
     plt.scatter(x_tmp,y_tmp,c = u)
-    #plt.tricontourf(x_tmp,y_tmp,u)
-    #plt.tricontourf(xdata, ydata, zdata)
     plt.colorbar()
     plt.show()
 
     plt.scatter(x_tmp,y_tmp,c = v)
-    #plt.tricontourf(x_tmp,y_tmp,u)
-    #plt.tricontourf(xdata, ydata, zdata)
     plt.colorbar()
     plt.show()
 

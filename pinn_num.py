@@ -9,7 +9,7 @@ def get_model(input_dim,output_dim,layers):
     input = tf.keras.Input(shape = (input_dim,))
     x = input
     for n_units in layers : 
-        x = tf.keras.layers.Dense(n_units, activation = 'tanh')(x)
+        x = tf.keras.layers.Dense(n_units, activation = 'tanh',kernel_initializer='glorot_normal')(x)
     x = tf.keras.layers.Dense(output_dim,activation = 'linear')(x)
     return tf.keras.Model(inputs = input, outputs = x)
 
@@ -222,13 +222,10 @@ class PINNSolver():
             return loss, grad_flat
         
         print('run scipy optimizer')
+
+        return scipy.optimize.fmin_l_bfgs_b(func=get_loss_and_grad, x0=x0,factr=10, pgtol=1e-10, m=50,maxls=50, maxiter=20000, callback=self.callback)
         
-        return scipy.optimize.minimize(fun=get_loss_and_grad,
-                                       x0=x0,
-                                       jac=True,
-                                       method=method,
-                                       callback=self.callback,
-                                       **kwargs)
+        #return scipy.optimize.minimize(fun=get_loss_and_grad,x0=x0,jac=True,method=method,callback=self.callback,**kwargs)
         
     def callback(self, xr=None):
         if self.iter % 50 == 0:
@@ -311,7 +308,7 @@ class StatNS_PINN(PINNSolver):
         '''
         # Compute PDE residual
         r = self.get_r()
-        phi_r = self.pde_residual_scaling_*tf.reduce_sum(r)
+        phi_r = self.pde_residual_scaling_*tf.reduce_mean(r)
 
         # Add phi_0 and phi_b to the loss
         #for i in range(len(X)):
@@ -322,7 +319,7 @@ class StatNS_PINN(PINNSolver):
         u, v, p = pred[:,0], pred[:,1], pred[:,2]
         uv_hat = tf.squeeze(tf.stack((u,v),axis = 1))
  
-        loss = phi_r + tf.reduce_sum(tf.square(Y - uv_hat))
+        loss = phi_r + tf.reduce_mean(tf.square(Y - uv_hat))
 
         return loss
 
