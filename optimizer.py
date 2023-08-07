@@ -117,7 +117,7 @@ class L_BFGS_B:
         loss, _ = self.evaluate(weights)
         self.progbar.on_batch_end(0, logs=dict(zip(self.metrics, [loss])))
         if self.iter % 50 == 0:
-            print('It {:05d}: loss = {:10.8e}'.format(self.iter,self.loss))
+            print('It {:05d}: loss = {:10.8e}'.format(self.iter,loss))
         self.hist.append(self.current_loss)
         self.iter+=1
 
