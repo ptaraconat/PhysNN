@@ -118,7 +118,7 @@ class L_BFGS_B:
         self.progbar.on_batch_end(0, logs=dict(zip(self.metrics, [loss])))
         if self.iter % 50 == 0:
             print('It {:05d}: loss = {:10.8e}'.format(self.iter,loss))
-        self.hist.append(self.current_loss)
+        self.hist.append(loss)
         self.iter+=1
 
     def fit(self):
