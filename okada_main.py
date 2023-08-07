@@ -1,12 +1,12 @@
-import lib.tf_silent
+import tf_silent
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.gridspec import GridSpec
-from lib.pinn import PINN
-from lib.network import Network
-from lib.optimizer import L_BFGS_B
+from pinn import PINN
+from network import Network
+from optimizer import L_BFGS_B
 
 def uv(network, xy):
     """
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     y_train = [zeros, zeros, uv_bnd]
 
     # train the model using L-BFGS-B algorithm
-    lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train)
+    lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=20000)
     lbfgs.fit()
 
     # create meshgrid coordinates (x, y) for test plots
@@ -114,5 +114,5 @@ if __name__ == '__main__':
     contour(gs[0, 1], x, y, p, 'p')
     contour(gs[1, 0], x, y, u, 'u')
     contour(gs[1, 1], x, y, v, 'v')
-    plt.tight_layout()
+    #plt.tight_layout()
     plt.show()

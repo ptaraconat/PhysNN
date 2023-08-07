@@ -1,6 +1,7 @@
 import tensorflow as tf 
 import scipy.optimize
 import numpy as np 
+import matplotlib.pyplot as plt 
 
 # In order to run scipy optimizer on tensorflow model, on should provide the model 
 # parameters as a 1D array. 
@@ -123,10 +124,26 @@ print('model1(3) == model2(3) => ',model(np.array([3])) == model2(np.array([3]))
 model3 = tf.keras.Sequential([tf.keras.layers.Dense(10,input_shape = (1,), activation = 'sigmoid'),
                              tf.keras.layers.Dense(10,activation = 'sigmoid'),
                              tf.keras.layers.Dense(1,activation = 'linear')])
-interfacer = ModelInterfacer(model, tf.keras.losses.mean_squared_error, x, y)
+interfacer = ModelInterfacer(model3, tf.keras.losses.mean_squared_error, x, y)
 init_guess = interfacer.get_weights()[0]
-scipy.optimize.fmin_l_bfgs_b(func=interfacer, x0= init_guess,factr=10, pgtol=1e-10, m=50,maxls=50, maxiter=200,callback = interfacer.callback())
-scipy.optimize.minimize(fun=interfacer,x0=init_guess,jac=True,callback=interfacer.callback)
+#scipy.optimize.fmin_l_bfgs_b(func=interfacer, x0= init_guess,factr=10, pgtol=1e-10, m=50,maxls=50, maxiter=200,callback = interfacer.callback())
+#scipy.optimize.fmin_l_bfgs_b(func=interfacer, x0= init_guess,callback = interfacer.callback())
 
-print()
-        
+#scipy.optimize.minimize(fun=interfacer,x0=init_guess,jac=True,callback=interfacer.callback)
+
+results = scipy.optimize.minimize(fun = interfacer, 
+                                  x0 = init_guess, 
+                                  method = 'L-BFGS-B',
+                                  jac = True, 
+                                  callback = interfacer.callback,
+                                  options = {'iprint' : 0,
+                                             'maxiter': 50000,
+                                             'maxfun' : 50000,
+                                             'maxcor' : 500,
+                                             'maxls': 500,
+                                             'gtol': 0,
+                                             'ftol' : 0})
+
+plt.plot(x,interfacer.model(x),'ro')
+plt.plot(x,y,'k-')
+plt.show()

@@ -113,6 +113,7 @@ class L_BFGS_B:
         """
         self.progbar.on_batch_begin(0)
         loss, _ = self.evaluate(weights)
+        print('It : loss = {:10.8e}'.format(loss))
         self.progbar.on_batch_end(0, logs=dict(zip(self.metrics, [loss])))
 
     def fit(self):
