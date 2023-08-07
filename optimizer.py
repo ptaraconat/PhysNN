@@ -47,6 +47,8 @@ class L_BFGS_B:
             count_mode='steps', stateful_metrics=self.metrics)
         self.progbar.set_params( {
             'verbose':1, 'epochs':1, 'steps':self.maxiter, 'metrics':self.metrics})
+        self.hist = []
+        self.iter = 0
 
     def set_weights(self, flat_weights):
         """
@@ -113,8 +115,11 @@ class L_BFGS_B:
         """
         self.progbar.on_batch_begin(0)
         loss, _ = self.evaluate(weights)
-        print('It : loss = {:10.8e}'.format(loss))
         self.progbar.on_batch_end(0, logs=dict(zip(self.metrics, [loss])))
+        if self.iter % 50 == 0:
+            print('It {:05d}: loss = {:10.8e}'.format(self.iter,self.current_loss))
+        self.hist.append(self.current_loss)
+        self.iter+=1
 
     def fit(self):
         """

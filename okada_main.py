@@ -92,7 +92,7 @@ if __name__ == '__main__':
     y_train = [zeros, zeros, uv_bnd]
 
     # train the model using L-BFGS-B algorithm
-    lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=20000)
+    lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=200)
     lbfgs.fit()
 
     # create meshgrid coordinates (x, y) for test plots
@@ -107,6 +107,19 @@ if __name__ == '__main__':
     u, v = uv(network, xy)
     u = u.reshape(x.shape)
     v = v.reshape(x.shape)
+
+    #
+    plt.scatter(x,y,c = p)
+    plt.colorbar()
+    plt.show()
+
+    plt.scatter(x,y,c = u)
+    plt.colorbar()
+    plt.show()
+
+    plt.scatter(x,y,c = v)
+    plt.colorbar()
+    plt.show()
     # plot test results
     fig = plt.figure(figsize=(6, 5))
     gs = GridSpec(2, 2)
