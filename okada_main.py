@@ -52,14 +52,16 @@ def contour(grid, x, y, z, title, levels=50):
     cbar = plt.colorbar(pad=0.03, aspect=25, format='%.0e')
     cbar.mappable.set_clim(vmin, vmax)
 
-if __name__ == '__main__':
+def main(): 
     """
     Test the physics informed neural network (PINN) model
     for the cavity flow governed by the steady Navier-Stokes equation.
     """
 
+    max_iter = 10 #20000
+
     # number of training samples
-    num_train_samples = 10000
+    num_train_samples = 100 #10000
     # number of test samples
     num_test_samples = 100
 
@@ -92,7 +94,7 @@ if __name__ == '__main__':
     y_train = [zeros, zeros, uv_bnd]
 
     # train the model using L-BFGS-B algorithm
-    lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=200)
+    lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=maxiter)
     lbfgs.fit()
 
     # create meshgrid coordinates (x, y) for test plots
@@ -129,3 +131,7 @@ if __name__ == '__main__':
     contour(gs[1, 1], x, y, v, 'v')
     #plt.tight_layout()
     plt.show()
+
+
+if __name__ == '__main__':
+    main()
