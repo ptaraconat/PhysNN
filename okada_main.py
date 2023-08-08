@@ -133,4 +133,4 @@ def main(maxiter = 20000, num_train_samples = 10000, num_test_samples = 100):
 
 
 if __name__ == '__main__':
-    main()
+    main(maxiter = 2, num_train_samples = 10000, num_test_samples = 100)
