@@ -92,11 +92,11 @@ class ModelInterfacer():
  
 ################################
 # Define some data 
-x = np.linspace(0,10,1000)
+x = np.linspace(0,10,5000)
 y = np.sqrt(x)
 # Define and train model
-model = tf.keras.Sequential([tf.keras.layers.Dense(10,input_shape = (1,), activation = 'sigmoid'),
-                             tf.keras.layers.Dense(10,activation = 'sigmoid'),
+model = tf.keras.Sequential([tf.keras.layers.Dense(10,input_shape = (1,), activation = 'relu'),
+                             tf.keras.layers.Dense(10,activation = 'relu'),
                              tf.keras.layers.Dense(1,activation = 'linear')])
 model.compile(optimizer = 'adam', loss = 'MSE')
 model.summary()
@@ -106,8 +106,8 @@ flat_w, shapes_w = stack_tf_model_weights(model)
 ##### Test set_model_weigths function #####
 print('==============================================')
 print('====== Test set_model_weights function =======')
-model2 = tf.keras.Sequential([tf.keras.layers.Dense(10,input_shape = (1,), activation = 'sigmoid'),
-                             tf.keras.layers.Dense(10,activation = 'sigmoid'),
+model2 = tf.keras.Sequential([tf.keras.layers.Dense(10,input_shape = (1,), activation = 'relu'),
+                             tf.keras.layers.Dense(10,activation = 'relu'),
                              tf.keras.layers.Dense(1,activation = 'linear')])
 
 print('Before setting model2 weights with flatten_weights')
@@ -121,10 +121,11 @@ print('model2(3) prediction :',model2(np.array([3])))
 print('model1(3) == model2(3) => ',model(np.array([3])) == model2(np.array([3])))
 
 ########### Train with scipy optimizer ##########
-model3 = tf.keras.Sequential([tf.keras.layers.Dense(10,input_shape = (1,), activation = 'sigmoid'),
-                             tf.keras.layers.Dense(10,activation = 'sigmoid'),
+model3 = tf.keras.Sequential([tf.keras.layers.Dense(10,input_shape = (1,), activation = 'relu'),
+                             tf.keras.layers.Dense(10,activation = 'relu'),
                              tf.keras.layers.Dense(1,activation = 'linear')])
-interfacer = ModelInterfacer(model3, tf.keras.losses.mean_squared_error, x, y)
+
+interfacer = ModelInterfacer(model, tf.keras.losses.mean_squared_error, x, y)
 init_guess = interfacer.get_weights()[0]
 #scipy.optimize.fmin_l_bfgs_b(func=interfacer, x0= init_guess,factr=10, pgtol=1e-10, m=50,maxls=50, maxiter=200,callback = interfacer.callback())
 #scipy.optimize.fmin_l_bfgs_b(func=interfacer, x0= init_guess,callback = interfacer.callback())
@@ -145,5 +146,18 @@ results = scipy.optimize.minimize(fun = interfacer,
                                              'ftol' : 0})
 
 plt.plot(x,interfacer.model(x),'ro')
+plt.plot(x,y,'k-')
+plt.show()
+
+################
+from optimizer import * 
+
+x = np.linspace(0,10,100)
+y = np.sqrt(x)
+
+lbfgs = L_BFGS_B(model3, [x], [y])
+lbfgs.fit()
+
+plt.plot(x,lbfgs.model(x),'ro')
 plt.plot(x,y,'k-')
 plt.show()

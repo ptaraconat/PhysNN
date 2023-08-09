@@ -1,5 +1,5 @@
 import tensorflow as tf
-from layer import GradientLayer
+from layer import *
 
 class PINN:
     """
@@ -62,3 +62,22 @@ class PINN:
         # build the PINN model for the steady Navier-Stokes equation
         return tf.keras.models.Model(
             inputs=[xy_eqn, xy_bnd], outputs=[uv_eqn, psi_bnd, uv_bnd])
+    
+class PINN_HarmOsc: 
+
+    def __init__(self,model, mass, viscosity, stiffness):
+        self.mass = mass 
+        self.viscosity = viscosity
+        self.stiffness = stiffness
+        self.network = model
+        self.grads = GradientLayer_HarmOsc(self.network)
+
+    def build(self):
+        time_eq = tf.keras.layers.Input(shape = (1,))
+        time_bnd = tf.keras.layers.Input(shape = (1,))
+        #
+        u_eq, u_x_eq, u_xx_eq = self.grads(time_eq)
+        u_bnd, _, _ = self.grads(time_bnd)
+        #
+        res_eqn = self.mass * u_xx_eq + self.viscosity * u_x_eq + self.stiffness * u_eq
+        return tf.keras.Model(inputs = [time_bnd, time_eq], outputs = [u_bnd, res_eqn] )

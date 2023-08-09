@@ -65,3 +65,54 @@ class GradientLayer(tf.keras.layers.Layer):
         v_grads = v, v_x, v_y, v_xx, v_yy
 
         return psi, p_grads, u_grads, v_grads
+
+class GradientLayer_HarmOsc(tf.keras.layers.Layer):
+    """
+    Custom layer to compute derivatives for the harmonic oscilattor equation.
+
+    Attributes:
+        model: keras network model.
+    """
+
+    def __init__(self, model, **kwargs):
+        """
+        Args:
+            model: keras network model.
+        """
+
+        self.model = model
+        super().__init__(**kwargs)
+
+    def call(self, time):
+        """
+        Computing derivatives for the steady Navier-Stokes equation.
+
+        Args:
+            time: input variable.
+
+        Returns:
+            u: prediction
+            u_x: prediction first derivatives
+            u_xx: prediction second derivatives
+        """
+
+        with tf.GradientTape(persistent=True) as tape:
+
+            # Variable x is watched during tape
+            # to compute derivatives u_x and u_xx
+            tape.watch(time)
+
+            # Determine residual
+            #u = model(tf.stack([t[:,0], x[:,0]], axis=1))
+            u = self.model(time)
+
+            # Compute gradient u_x within the GradientTape
+            # since we need second derivatives
+            u_x = tape.gradient(u, time)
+
+        u_xx = tape.gradient(u_x, time)
+
+        del tape
+
+        return u, u_x, u_xx
+

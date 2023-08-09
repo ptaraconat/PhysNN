@@ -9,7 +9,7 @@ def main():
     X_r = np.linspace(0,1,500)
     X_r = np.expand_dims(X_r,1).astype(np.float32)
     # Set PDE parameters 
-    mass = 1
+    mass = 1a
     viscosity = 4
     stiffness = 400
     # Set solver 

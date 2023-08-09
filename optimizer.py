@@ -79,7 +79,6 @@ class L_BFGS_B:
         Returns:
             loss and gradients for weights as tf.Tensor.
         """
-
         with tf.GradientTape() as g:
             loss = tf.reduce_mean(tf.keras.losses.logcosh(self.model(x), y))
         grads = g.gradient(loss, self.model.trainable_variables)
@@ -116,7 +115,7 @@ class L_BFGS_B:
         self.progbar.on_batch_begin(0)
         loss, _ = self.evaluate(weights)
         self.progbar.on_batch_end(0, logs=dict(zip(self.metrics, [loss])))
-        if self.iter % 50 == 0:
+        if self.iter % 1 == 0:
             print('It {:05d}: loss = {:10.8e}'.format(self.iter,loss))
         self.hist.append(loss)
         self.iter+=1
