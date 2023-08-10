@@ -52,7 +52,7 @@ def contour(grid, x, y, z, title, levels=50):
     cbar = plt.colorbar(pad=0.03, aspect=25, format='%.0e')
     cbar.mappable.set_clim(vmin, vmax)
 
-def main(maxiter = 20000, num_train_samples = 10000, num_test_samples = 100): 
+def main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100): 
     """
     Test the physics informed neural network (PINN) model
     for the cavity flow governed by the steady Navier-Stokes equation.
@@ -133,4 +133,4 @@ def main(maxiter = 20000, num_train_samples = 10000, num_test_samples = 100):
 
 
 if __name__ == '__main__':
-    main(maxiter = 2, num_train_samples = 10000, num_test_samples = 100)
+    main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100)
