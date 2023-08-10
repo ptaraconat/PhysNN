@@ -68,8 +68,8 @@ def main():
     plt.plot(x_colloc,oscillator(d_param,w0_param,x_colloc),'k-')
     plt.show() 
 
-    optim = tf.keras.optimizers.Adam(learning_rate = 1e-4)
-    tfopt = TFOpt(model = pinn,x_train = x_train,y_train = y_train,optim = optim, maxiter = maxiter)
+    optim = tf.keras.optimizers.Adam(learning_rate = 1e-3)
+    tfopt = TFOpt(model = pinn,x_train = x_train,y_train = y_train,optim = optim, maxiter = 20000)
     tfopt.fit()
 
     plt.plot(tfopt.hist)
@@ -85,7 +85,7 @@ def main():
     lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=maxiter)
     lbfgs.fit()
 
-    plt.plot(tfopt.hist)
+    plt.plot(lbfgs.hist)
     plt.show()
     plt.close()
     # Plot Result

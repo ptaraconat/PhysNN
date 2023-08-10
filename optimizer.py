@@ -19,6 +19,7 @@ class TFOpt :
             'verbose':1, 'epochs':1, 'steps':self.maxiter, 'metrics':self.metrics})
         self.hist = []
         self.iter = 0
+        self.scaling = [1., 1.e-4]
 
     @tf.function
     def tf_evaluate(self, x, y):
@@ -32,7 +33,13 @@ class TFOpt :
             loss and gradients for weights as tf.Tensor.
         """
         with tf.GradientTape() as g:
-            loss = tf.reduce_mean(tf.keras.losses.logcosh(self.model(x), y))
+            y_hat = self.model(x)
+            loss = 0 
+            for i in range(len(y)):
+                loss_tmp = tf.reduce_mean(tf.keras.losses.mean_squared_error(y_hat[i], y[i])) 
+                loss += self.scaling[i]*loss_tmp
+            #loss = tf.reduce_mean(tf.keras.losses.mean_squared_error(y_hat, y))
+            #loss = tf.reduce_mean(tf.keras.losses.logcosh(y_hat, y))
         grads = g.gradient(loss, self.model.trainable_variables)
         return loss, grads
 
