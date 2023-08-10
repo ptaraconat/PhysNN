@@ -43,7 +43,7 @@ def main():
     # create training input
     x_colloc = np.linspace(0,1,N_training_data)
     y_colloc = np.zeros(N_training_data)
-    x_data = np.linspace(0,0.2,N_training_data)
+    x_data = np.linspace(0,0.4,N_training_data)
     d_param = viscosity/(2*mass)
     w0_param = np.sqrt(stiffness/mass)
     y_data = oscillator(d_param, w0_param, x_data)

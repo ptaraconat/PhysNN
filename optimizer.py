@@ -52,7 +52,7 @@ class TFOpt :
             loss = train_step()
             
             self.callback(loss)
-            
+
     def callback(self, loss):
         """
         Callback that prints the progress to stdout.
@@ -60,7 +60,7 @@ class TFOpt :
         Args:
             weights: flatten weights.
         """
-        if self.iter % 1 == 0:
+        if self.iter % 50 == 0:
             print('It {:05d}: loss = {:10.8e}'.format(self.iter,loss))
         self.hist.append(loss)
         self.iter+=1
