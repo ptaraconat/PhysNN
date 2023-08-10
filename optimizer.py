@@ -2,6 +2,69 @@ import scipy.optimize
 import numpy as np
 import tensorflow as tf
 
+class TFOpt : 
+
+    def __init__(self,model,x_train,y_train,optim,maxiter = 1000):
+        # set attributes
+        self.model = model
+        self.x_train = [ tf.constant(x, dtype=tf.float32) for x in x_train ]
+        self.y_train = [ tf.constant(y, dtype=tf.float32) for y in y_train ]
+        self.optimizer = optim
+        self.maxiter = maxiter
+        self.metrics = ['loss']
+        # initialize the progress bar
+        self.progbar = tf.keras.callbacks.ProgbarLogger(
+            count_mode='steps', stateful_metrics=self.metrics)
+        self.progbar.set_params( {
+            'verbose':1, 'epochs':1, 'steps':self.maxiter, 'metrics':self.metrics})
+        self.hist = []
+        self.iter = 0
+
+    @tf.function
+    def tf_evaluate(self, x, y):
+        """
+        Evaluate loss and gradients for weights as tf.Tensor.
+
+        Args:
+            x: input data.
+
+        Returns:
+            loss and gradients for weights as tf.Tensor.
+        """
+        with tf.GradientTape() as g:
+            loss = tf.reduce_mean(tf.keras.losses.logcosh(self.model(x), y))
+        grads = g.gradient(loss, self.model.trainable_variables)
+        return loss, grads
+
+    def fit(self):
+        """This method performs a gradient descent type optimization."""
+        
+        @tf.function
+        def train_step():
+            loss, grad_theta = self.tf_evaluate(self.x_train, self.y_train)
+            
+            # Perform gradient descent step
+            self.optimizer.apply_gradients(zip(grad_theta, self.model.trainable_variables))
+            return loss
+        
+        for i in range(self.maxiter):
+            
+            loss = train_step()
+            
+            self.callback(loss)
+            
+    def callback(self, loss):
+        """
+        Callback that prints the progress to stdout.
+
+        Args:
+            weights: flatten weights.
+        """
+        if self.iter % 1 == 0:
+            print('It {:05d}: loss = {:10.8e}'.format(self.iter,loss))
+        self.hist.append(loss)
+        self.iter+=1
+
 class L_BFGS_B:
     """
     Optimize the keras network model using L-BFGS-B algorithm.

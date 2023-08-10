@@ -62,10 +62,30 @@ def main():
     # train the model using L-BFGS-B algorithm
     x_train = [x_data,x_colloc]
     y_train = [y_data,y_colloc]
+
+    yhat = network(x_colloc)
+    plt.plot(x_colloc,yhat,'ro')
+    plt.plot(x_colloc,oscillator(d_param,w0_param,x_colloc),'k-')
+    plt.show() 
+
+    optim = tf.keras.optimizers.Adam(learning_rate = 1e-4)
+    tfopt = TFOpt(model = pinn,x_train = x_train,y_train = y_train,optim = optim, maxiter = maxiter)
+    tfopt.fit()
+
+    plt.plot(tfopt.hist)
+    plt.show()
+    plt.close()
+    # Plot Result
+    yhat = network(x_colloc)
+    plt.plot(x_colloc,yhat,'ro')
+    plt.plot(x_colloc,oscillator(d_param,w0_param,x_colloc),'k-')
+    plt.show() 
+
+
     lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=maxiter)
     lbfgs.fit()
 
-    plt.plot(lbfgs.hist)
+    plt.plot(tfopt.hist)
     plt.show()
     plt.close()
     # Plot Result
