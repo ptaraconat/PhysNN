@@ -69,7 +69,7 @@ def main():
     plt.show() 
 
     optim = tf.keras.optimizers.Adam(learning_rate = 1e-3)
-    tfopt = TFOpt(model = pinn,x_train = x_train,y_train = y_train,optim = optim, maxiter = 20000)
+    tfopt = TFOpt(model = pinn,x_train = x_train,y_train = y_train,optim = optim, maxiter = 1000)
     tfopt.fit()
 
     plt.plot(tfopt.hist)
