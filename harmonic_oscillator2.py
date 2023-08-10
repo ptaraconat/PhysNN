@@ -82,7 +82,7 @@ def main():
     plt.show() 
 
 
-    lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=maxiter)
+    lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=maxiter, loss =  tf.keras.losses.mean_squared_error, scaling = [1, 1e-4])
     lbfgs.fit()
 
     plt.plot(lbfgs.hist)

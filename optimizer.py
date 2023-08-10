@@ -2,25 +2,28 @@ import scipy.optimize
 import numpy as np
 import tensorflow as tf
 
-class TFOpt : 
+class Optimizer : 
 
-    def __init__(self,model,x_train,y_train,optim,maxiter = 1000):
+    def __init__(self,model,x_train,y_train,maxiter,loss, scaling = None ):
         # set attributes
         self.model = model
         self.x_train = [ tf.constant(x, dtype=tf.float32) for x in x_train ]
         self.y_train = [ tf.constant(y, dtype=tf.float32) for y in y_train ]
-        self.optimizer = optim
+        self.loss_func = loss 
+        self.hist = []
+        self.iter = 0
         self.maxiter = maxiter
         self.metrics = ['loss']
+        if scaling == None : 
+            self.scaling = None #[1. for _ in range(len(y_train))]
+        else :
+            self.scaling = scaling
         # initialize the progress bar
         self.progbar = tf.keras.callbacks.ProgbarLogger(
             count_mode='steps', stateful_metrics=self.metrics)
         self.progbar.set_params( {
             'verbose':1, 'epochs':1, 'steps':self.maxiter, 'metrics':self.metrics})
-        self.hist = []
-        self.iter = 0
-        self.scaling = [1., 1.e-4]
-
+        
     @tf.function
     def tf_evaluate(self, x, y):
         """
@@ -34,14 +37,38 @@ class TFOpt :
         """
         with tf.GradientTape() as g:
             y_hat = self.model(x)
-            loss = 0 
-            for i in range(len(y)):
-                loss_tmp = tf.reduce_mean(tf.keras.losses.mean_squared_error(y_hat[i], y[i])) 
-                loss += self.scaling[i]*loss_tmp
-            #loss = tf.reduce_mean(tf.keras.losses.mean_squared_error(y_hat, y))
+            if self.scaling != None: 
+                loss = 0 
+                for i in range(len(y)):
+                    loss_tmp = tf.reduce_mean(self.loss_func(y_hat[i], y[i])) 
+                    loss += self.scaling[i]*loss_tmp
+            else : 
+                #loss = tf.reduce_mean(self.loss_func(y_hat, y))
+                loss = tf.reduce_mean(self.loss_func(self.model(x), y))
             #loss = tf.reduce_mean(tf.keras.losses.logcosh(y_hat, y))
         grads = g.gradient(loss, self.model.trainable_variables)
         return loss, grads
+    
+    def callback(self, loss):
+        """
+        Callback that prints the progress to stdout.
+
+        Args:
+            weights: flatten weights.
+        """
+        if self.iter % 50 == 0:
+            print('It {:05d}: loss = {:10.8e}'.format(self.iter,loss))
+        self.hist.append(loss)
+        self.iter+=1
+        
+class TFOpt(Optimizer) : 
+
+    def __init__(self, model, x_train, y_train, optim, maxiter = 1000, scaling = [1., 1.e-4]):
+        # set attributes
+        super().__init__(model, x_train, y_train, maxiter, 
+                         loss = tf.keras.losses.mean_squared_error, 
+                         scaling = scaling)
+        self.optimizer = optim      
 
     def fit(self):
         """This method performs a gradient descent type optimization."""
@@ -72,7 +99,7 @@ class TFOpt :
         self.hist.append(loss)
         self.iter+=1
 
-class L_BFGS_B:
+class L_BFGS_B(Optimizer):
     """
     Optimize the keras network model using L-BFGS-B algorithm.
 
@@ -89,7 +116,9 @@ class L_BFGS_B:
         progbar: progress bar
     """
 
-    def __init__(self, model, x_train, y_train, factr=10, pgtol=1e-10, m=50, maxls=50, maxiter=20000):
+    def __init__(self, model, x_train, y_train, maxiter=20000,
+                 factr=10, pgtol=1e-10, m=50, maxls=50, 
+                 scaling = None, loss = tf.keras.losses.logcosh):
         """
         Args:
             model: optimization target model.
@@ -101,24 +130,17 @@ class L_BFGS_B:
             maxls: maximum number of line search steps (per iteration).
             maxiter: maximum number of iterations.
         """
+        # set attributes
+        super().__init__(model, x_train, y_train, maxiter, 
+                         loss = loss, 
+                         scaling = scaling)
 
         # set attributes
-        self.model = model
-        self.x_train = [ tf.constant(x, dtype=tf.float32) for x in x_train ]
-        self.y_train = [ tf.constant(y, dtype=tf.float32) for y in y_train ]
         self.factr = factr
         self.pgtol = pgtol
         self.m = m
         self.maxls = maxls
-        self.maxiter = maxiter
-        self.metrics = ['loss']
-        # initialize the progress bar
-        self.progbar = tf.keras.callbacks.ProgbarLogger(
-            count_mode='steps', stateful_metrics=self.metrics)
-        self.progbar.set_params( {
-            'verbose':1, 'epochs':1, 'steps':self.maxiter, 'metrics':self.metrics})
-        self.hist = []
-        self.iter = 0
+
 
     def set_weights(self, flat_weights):
         """
@@ -138,21 +160,23 @@ class L_BFGS_B:
         # set weights to the model
         self.model.set_weights(weights)
 
-    @tf.function
-    def tf_evaluate(self, x, y):
-        """
-        Evaluate loss and gradients for weights as tf.Tensor.
-
-        Args:
-            x: input data.
-
-        Returns:
-            loss and gradients for weights as tf.Tensor.
-        """
-        with tf.GradientTape() as g:
-            loss = tf.reduce_mean(tf.keras.losses.logcosh(self.model(x), y))
-        grads = g.gradient(loss, self.model.trainable_variables)
-        return loss, grads
+    #@tf.function
+    #def tf_evaluate(self, x, y):
+    #    """
+    #    Evaluate loss and gradients for weights as tf.Tensor.
+    #
+    #    Args:
+    #        x: input data.
+    #
+    #    Returns:
+    #        loss and gradients for weights as tf.Tensor.
+    #    """
+    #    with tf.GradientTape() as g:
+    #        y_hat = self.model(x)
+    #        loss = tf.reduce_mean(self.loss_func(self.model(x), y))
+    #        #loss = tf.reduce_mean(self.loss_func(y_hat, y))
+    #    grads = g.gradient(loss, self.model.trainable_variables)
+    #    return loss, grads
 
     def evaluate(self, weights):
         """
@@ -200,10 +224,6 @@ class L_BFGS_B:
             [ w.flatten() for w in self.model.get_weights() ])
         # optimize the weight vector
         print('Optimizer: L-BFGS-B (maxiter={})'.format(self.maxiter))
-        self.progbar.on_train_begin()
-        self.progbar.on_epoch_begin(1)
         scipy.optimize.fmin_l_bfgs_b(func=self.evaluate, x0=initial_weights,
             factr=self.factr, pgtol=self.pgtol, m=self.m,
             maxls=self.maxls, maxiter=self.maxiter, callback=self.callback)
-        self.progbar.on_epoch_end(1)
-        self.progbar.on_train_end()
