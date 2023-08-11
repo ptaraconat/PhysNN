@@ -147,15 +147,19 @@ def main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100):
     # create training output
     zeros = np.zeros((num_train_samples, 2))
     uv_bnd = np.zeros((num_train_samples, 2))
-    uv_bnd[..., 0] = u0 * np.floor(xy_bnd[..., 1])
+    index = np.where(xy_bnd[:,0] == 0.)[0]
+    #uv_bnd[..., 0] = u0 * np.floor(xy_bnd[..., 1])
+    uv_bnd[index,0] = u0
     y_train = [zeros, zeros, uv_bnd]
 
     plt.scatter(xy_eqn[:,0],xy_eqn[:,1],c = 'black')
     plt.scatter(xy_bnd[:,0],xy_bnd[:,1],c = uv_bnd[:,0])
+    plt.colorbar()
     plt.show()
 
     plt.scatter(xy_eqn[:,0],xy_eqn[:,1],c = 'black')
     plt.scatter(xy_bnd[:,0],xy_bnd[:,1],c = uv_bnd[:,1])
+    plt.colorbar()
     plt.show()
 
     # train the model using L-BFGS-B algorithm
