@@ -164,7 +164,7 @@ def main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100):
 
     # train the model using L-BFGS-B algorithm
     lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=maxiter)
-    #lbfgs.fit()
+    lbfgs.fit()
 
     # create meshgrid coordinates (x, y) for test plots
     x = np.linspace(0, 1, num_test_samples)
