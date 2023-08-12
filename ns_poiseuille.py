@@ -171,7 +171,7 @@ def main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100, maxi
 
     # train the model with adam 
     optim = tf.keras.optimizers.Adam(learning_rate = 1e-3)
-    tfopt = TFOpt(model = pinn,x_train = x_train,y_train = y_train,optim = optim, maxiter = maxiter_adam)
+    tfopt = TFOpt(model = pinn,x_train = x_train,y_train = y_train,optim = optim, scaling = None, maxiter = maxiter_adam)
     tfopt.fit()
 
     # train the model using L-BFGS-B algorithm
