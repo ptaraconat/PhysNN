@@ -7,7 +7,7 @@ from matplotlib.colors import Normalize
 from matplotlib.gridspec import GridSpec
 from pinn import PINN
 from network import Network
-from optimizer import L_BFGS_B
+from optimizer import L_BFGS_B, TFOpt
 
 def get_data(L, h, u_in):
     # Generate boudary data (X_data, Y_data)
