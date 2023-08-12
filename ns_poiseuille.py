@@ -109,19 +109,26 @@ def contour(grid, x, y, z, title, levels=50):
     cbar = plt.colorbar(pad=0.03, aspect=25, format='%.0e')
     cbar.mappable.set_clim(vmin, vmax)
 
-def main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100): 
+def main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100, maxiter_adam = 20000): 
     """
     Test the physics informed neural network (PINN) model
     for the cavity flow governed by the steady Navier-Stokes equation.
     """
 
-    u0 = 0.034
-    h = 0.05
-    L = 20*h
+    #u0 = 0.034
+    #h = 0.05
+    #L = 20*h
     #Init data
-    rho = 910
-    mu = 0.3094
-    nu = mu/rho
+    #rho = 910
+    #mu = 0.3094
+    #nu = mu/rho
+
+
+    h = 1 
+    L = 1 
+    u0 = 1
+    rho = 1
+    nu = 0.01
 
     # build a core network model
     network = Network().build()
@@ -161,6 +168,11 @@ def main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100):
     plt.scatter(xy_bnd[:,0],xy_bnd[:,1],c = uv_bnd[:,1])
     plt.colorbar()
     plt.show()
+
+    # train the model with adam 
+    optim = tf.keras.optimizers.Adam(learning_rate = 1e-3)
+    tfopt = TFOpt(model = pinn,x_train = x_train,y_train = y_train,optim = optim, maxiter = maxiter_adam)
+    tfopt.fit()
 
     # train the model using L-BFGS-B algorithm
     lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=maxiter)
