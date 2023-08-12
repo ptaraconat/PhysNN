@@ -124,11 +124,19 @@ def main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100, maxi
     #nu = mu/rho
 
 
-    h = 1 
-    L = 1 
-    u0 = 1
+    #h = 1 
+    #L = 1 
+    #u0 = 1
+    #rho = 1
+    #nu = 0.01
+
+
+    h = 0.41
+    L = 2.1
+    u0 = 4/3
+    Re = 20. 
     rho = 1
-    nu = 0.01
+    nu = (u0*h)/Re
 
     # build a core network model
     network = Network().build()
