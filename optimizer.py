@@ -63,10 +63,11 @@ class Optimizer :
         
 class TFOpt(Optimizer) : 
 
-    def __init__(self, model, x_train, y_train, optim, maxiter = 1000, scaling = [1., 1.e-4]):
+    def __init__(self, model, x_train, y_train, optim, maxiter = 1000, scaling = [1., 1.e-4],
+                 loss = tf.keras.losses.mean_squared_error):
         # set attributes
         super().__init__(model, x_train, y_train, maxiter, 
-                         loss = tf.keras.losses.mean_squared_error, 
+                         loss = loss, 
                          scaling = scaling)
         self.optimizer = optim      
 
