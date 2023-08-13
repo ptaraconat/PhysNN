@@ -55,7 +55,14 @@ class Network:
         Returns:
             keras network model
         """
-
+        #x = Input((1,), name=name+'_input_x')
+        #y = Input((1,), name=name+'_input_y')
+        # normalize data between -1 and 1
+        #x_norm = (x - x_range[0]) / (x_range[1] - x_range[0])
+        #y_norm = (y - y_range[0]) / (y_range[1] - y_range[1])
+        #self.lb = X.min(0)
+        #self.ub = X.max(0)
+        #H = 2.0*(X - self.lb)/(self.ub - self.lb) - 1.0
         # input layer
         inputs = tf.keras.layers.Input(shape=(num_inputs,))
         # hidden layers

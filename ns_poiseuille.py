@@ -187,8 +187,8 @@ def main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100, maxi
     lbfgs.fit()
 
     # create meshgrid coordinates (x, y) for test plots
-    x = np.linspace(0, 1, num_test_samples)
-    y = np.linspace(0, 1, num_test_samples)
+    x = np.linspace(0, 1*L, num_test_samples)
+    y = np.linspace(0, 1*h, num_test_samples)
     x, y = np.meshgrid(x, y)
     xy = np.stack([x.flatten(), y.flatten()], axis=-1)
     # predict (psi, p)
@@ -198,6 +198,18 @@ def main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100, maxi
     u, v = uv(network, xy)
     u = u.reshape(x.shape)
     v = v.reshape(x.shape)
+
+    plt.scatter(x,y,c = p)
+    plt.colorbar()
+    plt.show()
+
+    plt.scatter(x,y,c = u)
+    plt.colorbar()
+    plt.show()
+
+    plt.scatter(x,y,c = v)
+    plt.colorbar()
+    plt.show()
 
     # plot test results
     fig = plt.figure(figsize=(6, 5))
