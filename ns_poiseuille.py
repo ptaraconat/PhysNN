@@ -177,13 +177,14 @@ def main(maxiter = 2000, num_train_samples = 10000, num_test_samples = 100, maxi
     plt.colorbar()
     plt.show()
 
+    loss = tf.keras.losses.logcosh
     # train the model with adam 
     optim = tf.keras.optimizers.Adam(learning_rate = 1e-3)
-    tfopt = TFOpt(model = pinn,x_train = x_train,y_train = y_train,optim = optim, scaling = None, maxiter = maxiter_adam)
+    tfopt = TFOpt(model = pinn,x_train = x_train,y_train = y_train,optim = optim, scaling = None, loss = loss, maxiter = maxiter_adam)
     tfopt.fit()
 
     # train the model using L-BFGS-B algorithm
-    lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, maxiter=maxiter)
+    lbfgs = L_BFGS_B(model=pinn, x_train=x_train, y_train=y_train, loss = loss, maxiter=maxiter)
     lbfgs.fit()
 
     # create meshgrid coordinates (x, y) for test plots
